@@ -1,0 +1,33 @@
+{
+  "name": "obsidian-bulleted-markdown",
+  "version": "0.1.0",
+  "description": "Renders bullet lists as two-column cards in Live Preview",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "markdown",
+    "bullets"
+  ],
+  "author": "keymastervn",
+  "license": "MIT",
+  "devDependencies": {
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@types/node": "^16.11.6",
+    "builtin-modules": "^5.1.0",
+    "esbuild": "0.17.3",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  },
+  "overrides": {
+    "@codemirror/state": "^6.0.0"
+  }
+}

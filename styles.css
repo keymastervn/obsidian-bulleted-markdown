@@ -1,0 +1,164 @@
+/* Bulleted Markdown (BMD) - Live Preview Card Layout */
+
+/* ============================================
+   Card Container
+   ============================================ */
+
+.bmd-card {
+  display: grid;
+  grid-template-columns: var(--bmd-left-width, 200px) 1fr;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--bmd-border-radius, 8px);
+  margin: 8px 0;
+  overflow: hidden;
+  background: var(--background-primary);
+}
+
+/* ============================================
+   Left Column (Bullet Title)
+   ============================================ */
+
+.bmd-left {
+  background: var(--background-secondary);
+  padding: 12px;
+  font-weight: 600;
+  border-right: 1px solid var(--background-modifier-border);
+  display: flex;
+  align-items: flex-start;
+  word-break: break-word;
+}
+
+/* ============================================
+   Right Column (Nested Content)
+   ============================================ */
+
+.bmd-right {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ============================================
+   List Items in Right Column
+   ============================================ */
+
+.bmd-right ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.bmd-right li {
+  margin-bottom: 4px;
+}
+
+/* Hide default bullet markers in card mode */
+.bmd-card .list-bullet {
+  display: none;
+}
+
+/* ============================================
+   Special Item Types
+   ============================================ */
+
+/* Quoted text (starts with ") */
+.bmd-quote {
+  border-left: 3px solid var(--text-accent);
+  padding-left: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Numbered prefix (1-) */
+.bmd-numbered {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bmd-number-badge {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Image Handling
+   ============================================ */
+
+.bmd-card img,
+.bmd-right img {
+  max-height: var(--bmd-image-max-height, 120px);
+  width: auto;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ============================================
+   Deeper Nesting
+   ============================================ */
+
+.bmd-deep-nest {
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--background-modifier-border);
+  font-size: 0.95em;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.bmd-empty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ============================================
+   Mobile Responsive
+   ============================================ */
+
+@media (max-width: 600px) {
+  .bmd-card {
+    grid-template-columns: 1fr;
+  }
+  
+  .bmd-left {
+    border-right: none;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+}
+
+/* ============================================
+   Edit Mode Compatibility
+   ============================================ */
+
+/* Ensure cursor remains visible and editable */
+.bmd-card .cm-line {
+  padding: 2px 0;
+}
+
+.bmd-card .cm-cursor {
+  border-left-color: var(--text-normal);
+}
+
+/* ============================================
+   Animation (Optional)
+   ============================================ */
+
+.bmd-card {
+  transition: box-shadow 0.2s ease;
+}
+
+.bmd-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
