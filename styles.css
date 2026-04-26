@@ -1,82 +1,219 @@
-/* Bulleted Markdown (BMD) - Live Preview Card Layout */
+/* Bulleted Markdown (BMD) - Live Preview Table-like Card Layout */
 
 /* ============================================
-   Card Container
+   Base Line Grid Setup
    ============================================ */
 
-.bmd-card {
-  display: grid;
+.cm-line.bmd-line {
+  display: grid !important;
   grid-template-columns: var(--bmd-left-width, 200px) 1fr;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--bmd-border-radius, 8px);
-  margin: 8px 0;
-  overflow: hidden;
-  background: var(--background-primary);
+  margin: 0;
+  padding: 0;
+  min-height: 40px;
+}
+
+/* Make cm-content children participate in the grid */
+.cm-line.bmd-line .cm-content {
+  display: contents;
 }
 
 /* ============================================
-   Left Column (Bullet Title)
+   Card Borders (First/Last Lines)
    ============================================ */
 
-.bmd-left {
-  background: var(--background-secondary);
-  padding: 12px;
-  font-weight: 600;
-  border-right: 1px solid var(--background-modifier-border);
-  display: flex;
-  align-items: flex-start;
+.cm-line.bmd-first {
+  border-top: 1px dashed var(--background-modifier-border);
+  border-left: 1px dashed var(--background-modifier-border);
+  border-right: 1px dashed var(--background-modifier-border);
+  border-radius: 8px 8px 0 0;
+  margin-top: 12px;
+}
+
+.cm-line.bmd-child:not(.bmd-first):not(.bmd-last) {
+  border-left: 1px dashed var(--background-modifier-border);
+  border-right: 1px dashed var(--background-modifier-border);
+}
+
+.cm-line.bmd-last {
+  border-bottom: 1px dashed var(--background-modifier-border);
+  border-left: 1px dashed var(--background-modifier-border);
+  border-right: 1px dashed var(--background-modifier-border);
+  border-radius: 0 0 8px 8px;
+  margin-bottom: 12px;
+}
+
+/* Single-line blocks (only parent, no children) */
+.cm-line.bmd-first.bmd-last {
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Left Column (URL/Link)
+   ============================================ */
+
+.bmd-url {
+  grid-column: 1;
+  padding: 8px 12px;
+  border-right: 2px solid var(--text-normal);
+  font-weight: 500;
   word-break: break-word;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--text-normal);
+}
+
+.bmd-url a,
+.bmd-url .cm-link {
+  color: var(--link-color);
+  text-decoration: none;
 }
 
 /* ============================================
-   Right Column (Nested Content)
+   Right Column (Text Content)
    ============================================ */
+
+.bmd-text {
+  grid-column: 2;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
 
 .bmd-right {
-  padding: 12px;
+  grid-column: 2;
+  padding: 8px 12px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  max-height: 96px;
+  overflow: hidden;
+}
+
+/* Allow multiline text to exceed 96px */
+.bmd-right:has(.cm-line),
+.bmd-right[style*="height"] {
+  max-height: none;
 }
 
 /* ============================================
-   List Items in Right Column
+   Child Content with Images
    ============================================ */
 
-.bmd-right ul {
-  margin: 0;
-  padding-left: 16px;
-}
-
-.bmd-right li {
-  margin-bottom: 4px;
-}
-
-/* Hide default bullet markers in card mode */
-.bmd-card .list-bullet {
-  display: none;
+.bmd-has-image {
+  max-height: none;
+  align-items: flex-start;
 }
 
 /* ============================================
-   Special Item Types
+   Image Handling
    ============================================ */
 
-/* Quoted text (starts with ") */
+.bmd-image {
+  grid-column: 2;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.bmd-image img,
+.cm-line.bmd-line img {
+  max-height: 400px;
+  width: auto;
+  max-width: 100%;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Single image in child line gets green border */
+.bmd-image img {
+  border: 1px dashed var(--color-green);
+  padding: 4px;
+}
+
+/* Image within text (not single image) */
+.bmd-right img,
+.bmd-text img {
+  max-height: 96px;
+  width: auto;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+/* ============================================
+   Quote Styling
+   ============================================ */
+
 .bmd-quote {
+  grid-column: 2;
+  padding: 8px 12px;
   border-left: 3px solid var(--text-accent);
-  padding-left: 12px;
+  margin-left: 4px;
   font-style: italic;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  min-height: 40px;
 }
 
-/* Numbered prefix (1-) */
-.bmd-numbered {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* ============================================
+   Deeper Nesting (Level 2+)
+   ============================================ */
+
+.cm-line.bmd-deep-2 {
+  grid-template-columns: 200px 1fr;
 }
+
+.cm-line.bmd-deep-2 .bmd-right,
+.cm-line.bmd-deep-2 .bmd-quote,
+.cm-line.bmd-deep-2 .bmd-image,
+.cm-line.bmd-deep-2 .bmd-text {
+  margin-left: 16px;
+  padding-left: 12px;
+  border-left: 1px dotted var(--background-modifier-border);
+}
+
+.cm-line.bmd-deep-3 {
+  grid-template-columns: 200px 1fr;
+}
+
+.cm-line.bmd-deep-3 .bmd-right,
+.cm-line.bmd-deep-3 .bmd-quote,
+.cm-line.bmd-deep-3 .bmd-image,
+.cm-line.bmd-deep-3 .bmd-text {
+  margin-left: 32px;
+  padding-left: 12px;
+  border-left: 1px dotted var(--background-modifier-border);
+}
+
+.cm-line.bmd-deep-4 {
+  grid-template-columns: 200px 1fr;
+}
+
+.cm-line.bmd-deep-4 .bmd-right,
+.cm-line.bmd-deep-4 .bmd-quote,
+.cm-line.bmd-deep-4 .bmd-image,
+.cm-line.bmd-deep-4 .bmd-text {
+  margin-left: 48px;
+  padding-left: 12px;
+  border-left: 1px dotted var(--background-modifier-border);
+}
+
+/* ============================================
+   Numbered Badge (1-, 2-, etc.)
+   ============================================ */
 
 .bmd-number-badge {
+  position: absolute;
+  top: -10px;
+  left: -10px;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   border-radius: 50%;
@@ -87,40 +224,21 @@
   justify-content: center;
   font-size: 0.8em;
   font-weight: 700;
-  flex-shrink: 0;
+  z-index: 10;
 }
 
 /* ============================================
-   Image Handling
+   Hide Default Bullet Markers in BMD Mode
    ============================================ */
 
-.bmd-card img,
-.bmd-right img {
-  max-height: var(--bmd-image-max-height, 120px);
-  width: auto;
-  border-radius: 4px;
-  display: inline-block;
-  vertical-align: middle;
+.cm-line.bmd-line .list-bullet {
+  display: none !important;
 }
 
-/* ============================================
-   Deeper Nesting
-   ============================================ */
-
-.bmd-deep-nest {
-  margin-top: 4px;
-  padding-left: 12px;
-  border-left: 2px solid var(--background-modifier-border);
-  font-size: 0.95em;
-}
-
-/* ============================================
-   Empty State
-   ============================================ */
-
-.bmd-empty {
-  color: var(--text-faint);
-  font-style: italic;
+/* Hide the raw bullet character when in BMD mode */
+.cm-line.bmd-line .cm-content::before {
+  content: '';
+  grid-column: 1;
 }
 
 /* ============================================
@@ -128,13 +246,20 @@
    ============================================ */
 
 @media (max-width: 600px) {
-  .bmd-card {
+  .cm-line.bmd-line {
     grid-template-columns: 1fr;
   }
   
-  .bmd-left {
+  .bmd-url {
     border-right: none;
-    border-bottom: 1px solid var(--background-modifier-border);
+    border-bottom: 2px solid var(--text-normal);
+  }
+  
+  .bmd-text,
+  .bmd-right,
+  .bmd-image,
+  .bmd-quote {
+    grid-column: 1;
   }
 }
 
@@ -142,23 +267,20 @@
    Edit Mode Compatibility
    ============================================ */
 
-/* Ensure cursor remains visible and editable */
-.bmd-card .cm-line {
-  padding: 2px 0;
-}
-
-.bmd-card .cm-cursor {
+.cm-line.bmd-line .cm-cursor {
   border-left-color: var(--text-normal);
 }
 
-/* ============================================
-   Animation (Optional)
-   ============================================ */
-
-.bmd-card {
-  transition: box-shadow 0.2s ease;
+/* Ensure selections are visible */
+.cm-line.bmd-line .cm-selectionBackground {
+  background-color: var(--text-selection);
 }
 
-.bmd-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* ============================================
+   Hover Effects
+   ============================================ */
+
+.cm-line.bmd-first:hover,
+.cm-line.bmd-child:hover {
+  background-color: var(--background-modifier-hover);
 }

@@ -2,7 +2,7 @@ import { EditorView, ViewPlugin, ViewUpdate, Decoration, DecorationSet, WidgetTy
 import { Range } from '@codemirror/state';
 import { BMDSettings } from '../main';
 
-interface BulletBlock {
+export interface BulletBlock {
   from: number;
   to: number;
   indent: number;
@@ -12,9 +12,12 @@ interface BulletBlock {
   lineEnd: number;
   isNumbered: boolean;
   numberValue?: number;
+  lineFrom: number;
+  lineTo: number;
+  prefixLength: number;
 }
 
-function parseBulletBlocks(text: string): BulletBlock[] {
+export function parseBulletBlocks(text: string): BulletBlock[] {
   const lines = text.split('\n');
   const blocks: BulletBlock[] = [];
   const stack: BulletBlock[] = [];
@@ -41,7 +44,10 @@ function parseBulletBlocks(text: string): BulletBlock[] {
         lineStart: i,
         lineEnd: i,
         isNumbered,
-        numberValue
+        numberValue,
+        lineFrom: charOffset,
+        lineTo: charOffset + line.length,
+        prefixLength: prefix.length + 1 // prefix + space
       };
       
       // Pop stack until we find parent with less indent
@@ -77,156 +83,212 @@ function parseBulletBlocks(text: string): BulletBlock[] {
   return blocks;
 }
 
-function createDecorations(view: EditorView, settings: BMDSettings): DecorationSet {
-  if (!settings.enabled) return Decoration.none;
-  
-  const widgets: Range<Decoration>[] = [];
-  const text = view.state.doc.toString();
-  const blocks = parseBulletBlocks(text);
-  
-  for (let i = 0; i < blocks.length; i++) {
-    const block = blocks[i];
-    
-    // Only process top-level blocks (indent 0)
-    if (block.indent > 0) continue;
-    
-    // Create card container start
-    const cardStart = Decoration.widget({
-      widget: new CardStartWidget(settings, block.isNumbered, block.numberValue),
-      side: -1
-    });
-    widgets.push(cardStart.range(block.from));
-    
-    // Create left column marker for the parent bullet
-    const leftMarker = Decoration.mark({
-      class: 'bmd-left',
-      inclusiveStart: false,
-      inclusiveEnd: false
-    });
-    
-    // Find the content range (after the bullet marker)
-    const line = view.state.doc.lineAt(block.from);
-    const contentStart = line.from + block.indent + (block.isNumbered ? String(block.numberValue).length + 2 : 2);
-    widgets.push(leftMarker.range(contentStart, line.to));
-    
-    // Create right column for children
-    if (block.children.length > 0) {
-      const firstChild = block.children[0];
-      const lastChild = block.children[block.children.length - 1];
-      
-      const rightMarker = Decoration.mark({
-        class: 'bmd-right',
-        inclusiveStart: false,
-        inclusiveEnd: false
-      });
-      widgets.push(rightMarker.range(firstChild.from, lastChild.to));
-      
-      // Process nested items
-      for (const child of block.children) {
-        // Check for quoted text
-        if (child.content.startsWith('"')) {
-          const quoteMarker = Decoration.mark({
-            class: 'bmd-quote',
-            inclusiveStart: false,
-            inclusiveEnd: false
-          });
-          const childLine = view.state.doc.lineAt(child.from);
-          const childContentStart = childLine.from + child.indent + 2;
-          widgets.push(quoteMarker.range(childContentStart, childLine.to));
-        }
-        
-        // Check for images
-        if (child.content.includes('![[') || child.content.includes('![')) {
-          const imgMarker = Decoration.mark({
-            class: 'bmd-image',
-            inclusiveStart: false,
-            inclusiveEnd: false
-          });
-          const childLine = view.state.doc.lineAt(child.from);
-          widgets.push(imgMarker.range(childLine.from, childLine.to));
-        }
-        
-        // Handle deeper nesting
-        if (child.children.length > 0) {
-          const deepMarker = Decoration.mark({
-            class: 'bmd-deep-nest',
-            inclusiveStart: false,
-            inclusiveEnd: false
-          });
-          const firstDeep = child.children[0];
-          const lastDeep = child.children[child.children.length - 1];
-          widgets.push(deepMarker.range(firstDeep.from, lastDeep.to));
-        }
-      }
-    }
-    
-    // Create card container end
-    const cardEnd = Decoration.widget({
-      widget: new CardEndWidget(),
-      side: 1
-    });
-    widgets.push(cardEnd.range(block.to));
+export function extractUrl(content: string): { url: string | null; rest: string } {
+  // Match URLs, wiki links, or image embeds at the start
+  const urlMatch = content.match(/^(https?:\/\/\S+|!\[\[.*?\]\]|\[\[.*?\]\]|!\[.*?\]\(.*?\))/);
+  if (urlMatch) {
+    const url = urlMatch[0];
+    const rest = content.slice(url.length).trimStart();
+    return { url, rest };
   }
-  
-  return Decoration.set(widgets, true);
+  return { url: null, rest: content };
 }
 
-class CardStartWidget extends WidgetType {
-  constructor(
-    private settings: BMDSettings,
-    private isNumbered: boolean,
-    private numberValue?: number
-  ) {
+export function isImageOnly(content: string): boolean {
+  const trimmed = content.trim();
+  return /^!\[\[.*?\]\]$/.test(trimmed) || /^!\[.*?\]\(.*?\)$/.test(trimmed);
+}
+
+export function isQuotedText(content: string): boolean {
+  return content.trimStart().startsWith('"');
+}
+
+class NumberBadgeWidget extends WidgetType {
+  constructor(private numberValue: number) {
     super();
   }
   
   toDOM() {
-    const div = document.createElement('div');
-    div.className = 'bmd-card';
-    div.style.setProperty('--bmd-left-width', `${this.settings.leftColumnWidth}px`);
-    div.style.setProperty('--bmd-border-radius', `${this.settings.cardBorderRadius}px`);
-    div.style.setProperty('--bmd-image-max-height', `${this.settings.imageMaxHeight}px`);
-    
-    if (this.isNumbered && this.numberValue) {
-      const badge = document.createElement('span');
-      badge.className = 'bmd-number-badge';
-      badge.textContent = String(this.numberValue);
-      div.appendChild(badge);
-    }
-    
-    return div;
+    const span = document.createElement('span');
+    span.className = 'bmd-number-badge';
+    span.textContent = String(this.numberValue);
+    return span;
   }
   
-  eq(other: CardStartWidget): boolean {
-    return other.isNumbered === this.isNumbered && 
-           other.numberValue === this.numberValue &&
-           other.settings.leftColumnWidth === this.settings.leftColumnWidth;
+  eq(other: NumberBadgeWidget): boolean {
+    return other.numberValue === this.numberValue;
   }
 }
 
-class CardEndWidget extends WidgetType {
-  toDOM() {
-    const div = document.createElement('div');
-    div.className = 'bmd-card-end';
-    return div;
+function createDecorations(view: EditorView, settings: BMDSettings): DecorationSet {
+  if (!settings.enabled) return Decoration.none;
+  
+  const decorations: Range<Decoration>[] = [];
+  const text = view.state.doc.toString();
+  const blocks = parseBulletBlocks(text);
+  let blockId = 0;
+  
+  for (const block of blocks) {
+    // Only process top-level blocks (indent 0)
+    if (block.indent > 0) continue;
+    
+    blockId++;
+    const allLines = getAllLinesInBlock(block, view);
+    
+    // Tag each line in the block
+    for (let i = 0; i < allLines.length; i++) {
+      const lineInfo = allLines[i];
+      const isFirst = i === 0;
+      const isLast = i === allLines.length - 1;
+      
+      let lineClass = `bmd-line bmd-block-${blockId}`;
+      if (lineInfo.isParent) lineClass += ' bmd-parent';
+      else lineClass += ' bmd-child';
+      if (isFirst) lineClass += ' bmd-first';
+      if (isLast) lineClass += ' bmd-last';
+      if (lineInfo.depth > 1) lineClass += ` bmd-deep-${lineInfo.depth}`;
+      
+      const lineDeco = Decoration.line({
+        attributes: { class: lineClass }
+      });
+      decorations.push(lineDeco.range(lineInfo.line.from));
+      
+      // Process content marks
+      if (lineInfo.isParent) {
+        // Add numbered badge if applicable
+        if (lineInfo.block.isNumbered && lineInfo.block.numberValue) {
+          const badge = Decoration.widget({
+            widget: new NumberBadgeWidget(lineInfo.block.numberValue),
+            side: -1
+          });
+          decorations.push(badge.range(lineInfo.line.from));
+        }
+        
+        // Parent line: split URL and text
+        const { url, rest } = extractUrl(lineInfo.block.content);
+        const line = lineInfo.line;
+        const contentStart = line.from + lineInfo.block.indent + lineInfo.block.prefixLength;
+        
+        if (url) {
+          const urlStart = contentStart;
+          const urlEnd = urlStart + url.length;
+          
+          // Mark URL in left column
+          decorations.push(Decoration.mark({
+            class: 'bmd-url',
+            inclusiveStart: false,
+            inclusiveEnd: false
+          }).range(urlStart, urlEnd));
+          
+          // Mark remaining text in right column (if no children)
+          if (rest && lineInfo.block.children.length === 0) {
+            const restStart = urlEnd + (lineInfo.block.content.charAt(url.length) === ' ' ? 1 : 0);
+            decorations.push(Decoration.mark({
+              class: 'bmd-text',
+              inclusiveStart: false,
+              inclusiveEnd: false
+            }).range(restStart, line.to));
+          }
+        } else {
+          // No URL found, put entire content in left column
+          decorations.push(Decoration.mark({
+            class: 'bmd-url',
+            inclusiveStart: false,
+            inclusiveEnd: false
+          }).range(contentStart, line.to));
+        }
+      } else {
+        // Child line: put content in right column
+        const line = lineInfo.line;
+        const contentStart = line.from + lineInfo.block.indent + lineInfo.block.prefixLength;
+        const content = lineInfo.block.content;
+        
+        if (isImageOnly(content)) {
+          // Single image
+          decorations.push(Decoration.mark({
+            class: 'bmd-image',
+            inclusiveStart: false,
+            inclusiveEnd: false
+          }).range(contentStart, line.to));
+        } else if (isQuotedText(content)) {
+          // Quoted text
+          decorations.push(Decoration.mark({
+            class: 'bmd-quote',
+            inclusiveStart: false,
+            inclusiveEnd: false
+          }).range(contentStart, line.to));
+        } else {
+          // Regular text
+          const hasImage = content.includes('![[') || content.includes('![');
+          const markClass = hasImage ? 'bmd-right bmd-has-image' : 'bmd-right';
+          decorations.push(Decoration.mark({
+            class: markClass,
+            inclusiveStart: false,
+            inclusiveEnd: false
+          }).range(contentStart, line.to));
+        }
+      }
+    }
   }
   
-  eq(other: CardEndWidget): boolean {
-    return true;
+  return Decoration.set(decorations, true);
+}
+
+interface LineInfo {
+  line: { from: number; to: number; text: string };
+  block: BulletBlock;
+  isParent: boolean;
+  depth: number;
+}
+
+function getAllLinesInBlock(block: BulletBlock, view: EditorView): LineInfo[] {
+  const lines: LineInfo[] = [];
+  
+  // Add parent line
+  const parentLine = view.state.doc.lineAt(block.from);
+  lines.push({
+    line: { from: parentLine.from, to: parentLine.to, text: parentLine.text },
+    block,
+    isParent: true,
+    depth: 0
+  });
+  
+  // Add child lines recursively
+  function addChildren(children: BulletBlock[], depth: number) {
+    for (const child of children) {
+      const childLine = view.state.doc.lineAt(child.from);
+      lines.push({
+        line: { from: childLine.from, to: childLine.to, text: childLine.text },
+        block: child,
+        isParent: false,
+        depth
+      });
+      
+      if (child.children.length > 0) {
+        addChildren(child.children, depth + 1);
+      }
+    }
   }
+  
+  addChildren(block.children, 1);
+  return lines;
 }
 
 export function bmdExtension(settings: BMDSettings) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
+      prevEnabled: boolean;
       
       constructor(view: EditorView) {
+        this.prevEnabled = settings.enabled;
         this.decorations = createDecorations(view, settings);
       }
       
       update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged) {
+        const enabledChanged = settings.enabled !== this.prevEnabled;
+        if (update.docChanged || update.viewportChanged || enabledChanged) {
+          this.prevEnabled = settings.enabled;
           this.decorations = createDecorations(update.view, settings);
         }
       }

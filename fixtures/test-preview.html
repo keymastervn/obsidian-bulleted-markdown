@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMD Plugin Rendering Preview</title>
+    <style>
+        :root {
+            --background-primary: #ffffff;
+            --background-secondary: #f6f8fa;
+            --background-modifier-border: #d0d7de;
+            --text-normal: #333333;
+            --text-muted: #656d76;
+            --text-accent: #0969da;
+            --link-color: #0969da;
+            --color-green: #1a7f37;
+            --bmd-left-width: 200px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-primary: #0d1117;
+                --background-secondary: #161b22;
+                --background-modifier-border: #30363d;
+                --text-normal: #e6edf3;
+                --text-muted: #848d97;
+                --text-accent: #2f81f7;
+                --link-color: #2f81f7;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: var(--background-primary);
+            color: var(--text-normal);
+            line-height: 1.6;
+        }
+
+        h1 { color: var(--text-normal); }
+        h2 { color: var(--text-muted); margin-top: 40px; }
+
+        .bmd-line {
+            display: grid !important;
+            grid-template-columns: var(--bmd-left-width) 1fr;
+            margin: 0;
+            padding: 0;
+            min-height: 40px;
+            border-left: 1px dashed var(--background-modifier-border);
+            border-right: 1px dashed var(--background-modifier-border);
+        }
+
+        .bmd-line:hover {
+            background-color: var(--background-secondary);
+        }
+
+        .bmd-line.bmd-first {
+            border-top: 1px dashed var(--background-modifier-border);
+            border-radius: 8px 8px 0 0;
+            margin-top: 16px;
+        }
+
+        .bmd-line.bmd-last {
+            border-bottom: 1px dashed var(--background-modifier-border);
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 16px;
+        }
+
+        .bmd-line.bmd-first.bmd-last {
+            border: 1px dashed var(--background-modifier-border);
+            border-radius: 8px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+
+        .bmd-url {
+            grid-column: 1;
+            padding: 12px;
+            border-right: 2px solid var(--text-normal);
+            font-weight: 500;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            color: var(--text-normal);
+            position: relative;
+        }
+
+        .bmd-url a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        .bmd-url a:hover {
+            text-decoration: underline;
+        }
+
+        .bmd-text {
+            grid-column: 2;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .bmd-right {
+            grid-column: 2;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            max-height: 96px;
+            overflow: hidden;
+        }
+
+        .bmd-has-image {
+            max-height: none;
+            align-items: flex-start;
+        }
+
+        .bmd-image {
+            grid-column: 2;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bmd-image-placeholder {
+            max-height: 400px;
+            width: auto;
+            max-width: 100%;
+            border-radius: 4px;
+            border: 2px dashed var(--color-green);
+            padding: 20px 40px;
+            background: var(--background-secondary);
+            color: var(--color-green);
+            font-style: italic;
+        }
+
+        .bmd-right img, .bmd-text img {
+            max-height: 96px;
+            width: auto;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
+        .bmd-quote {
+            grid-column: 2;
+            padding: 12px;
+            border-left: 3px solid var(--text-accent);
+            margin-left: 8px;
+            font-style: italic;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .bmd-deep-2 .bmd-right,
+        .bmd-deep-2 .bmd-quote,
+        .bmd-deep-2 .bmd-image,
+        .bmd-deep-2 .bmd-text {
+            margin-left: 20px;
+            padding-left: 16px;
+            border-left: 2px dotted var(--background-modifier-border);
+        }
+
+        .bmd-deep-3 .bmd-right,
+        .bmd-deep-3 .bmd-quote,
+        .bmd-deep-3 .bmd-image,
+        .bmd-deep-3 .bmd-text {
+            margin-left: 40px;
+            padding-left: 16px;
+            border-left: 2px dotted var(--background-modifier-border);
+        }
+
+        .bmd-deep-4 .bmd-right,
+        .bmd-deep-4 .bmd-quote,
+        .bmd-deep-4 .bmd-image,
+        .bmd-deep-4 .bmd-text {
+            margin-left: 60px;
+            padding-left: 16px;
+            border-left: 2px dotted var(--background-modifier-border);
+        }
+
+        .bmd-number-badge {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: var(--text-accent);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .regular-content {
+            margin: 16px 0;
+            padding: 12px;
+            border-left: 3px solid var(--background-modifier-border);
+        }
+
+        .test-info {
+            background: var(--background-secondary);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            border: 1px solid var(--background-modifier-border);
+        }
+
+        .test-info code {
+            background: rgba(175, 184, 193, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>BMD Plugin Rendering Preview</h1>
+    
+    <div class="test-info">
+        <p><strong>Generated from test-rendering.md</strong></p>
+        <p>Run: <code>node fixtures/convert-to-html.js</code> to regenerate</p>
+        <p>Last updated: 4/27/2026, 12:33:03 AM</p>
+    </div>
+
+
+  <h1>BMD Plugin Test</h1>
+
+  <h2>Test Case 1: URL + Quote (from your example)</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://www.viktorcessan.com/the-economics-of-software-teams/">https://www.viktorcessan.com/the-economics-of-software-teams/</a></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">on Annual cost €1,040,000: &quot;Choosing to spend three weeks on a feature that serves 2% of users is a €60,000 decision. Delaying an operational improvement for a quarter is a decision with a calculable daily price tag. **Rebuilding a platform because the current one feels embarrassing, rather than because customers are leaving, is a capital allocation choice** that would look very different if the people making it were spending their own money&quot;</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-quote">&quot;Liability Hiding as an Asset&quot;</div>
+    </div>
+    <div class="bmd-line bmd-deep-3">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">I think this is right</div>
+    </div>
+    <div class="bmd-line bmd-deep-3">
+      <div class="bmd-url"></div>
+      <div class="bmd-image"><span class="bmd-image-placeholder">![[screenshot.png]]</span></div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-image"><span class="bmd-image-placeholder">![[screenshot2.png]]</span></div>
+    </div>
+
+  <h2>Test Case 2: Simple URL + Text</h2>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url"><a href="https://www.youtube.com/shorts/K8ecFeMlUrM">https://www.youtube.com/shorts/K8ecFeMlUrM</a></div>
+      <div class="bmd-text">&quot;she loves hot shower&quot;</div>
+    </div>
+
+  <h2>Test Case 3: URL + Long Quote</h2>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url"><a href="https://vnexpress.net/su-thay-pha-gioi-luat-cho-108-phu-nu-sinh-con-trong-chua-5066732.html">https://vnexpress.net/su-thay-pha-gioi-luat-cho-108-phu-nu-sinh-con-trong-chua-5066732.html</a></div>
+      <div class="bmd-text">&quot;Ông triệu tập 40 tăng sĩ cùng 30 cư sĩ trong chùa, nói: 'Thấy chết không cứu là điều kiêng kỵ lớn nhất của ngườ xuất gia, các quy tắc khác lúc này không còn quan trọng'.&quot; </div>
+    </div>
+
+  <h2>Test Case 4: Multiple Top Level</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://news.ycombinator.com/item?id=47892074">https://news.ycombinator.com/item?id=47892074</a></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-quote">&quot;The key insight is that context window management is the bottleneck</div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right bmd-has-image">![[screenshot.png]] HN thread screenshot</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">deeper level 1</div>
+    </div>
+    <div class="bmd-line bmd-last bmd-deep-3">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">deeper level n</div>
+    </div>
+
+  <h2>Test Case 5: No Children (Single Line)</h2>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url"><a href="https://example.com/some-article">https://example.com/some-article</a></div>
+      <div class="bmd-text">&quot;Just a link with a short note&quot;</div>
+    </div>
+
+  <h2>Test Case 6: Deep Nesting</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://github.com/obsidianmd/obsidian-api">https://github.com/obsidianmd/obsidian-api</a></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Core API documentation</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Plugin lifecycle</div>
+    </div>
+    <div class="bmd-line bmd-deep-3">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">onload() method</div>
+    </div>
+    <div class="bmd-line bmd-deep-4">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Register commands</div>
+    </div>
+    <div class="bmd-line bmd-deep-4">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Register events</div>
+    </div>
+    <div class="bmd-line bmd-deep-4">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Register extensions</div>
+    </div>
+    <div class="bmd-line bmd-deep-3">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">onunload() cleanup</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Settings API</div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">TypeScript definitions</div>
+    </div>
+
+  <h2>Test Case 7: Image Only Child</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://example.com/gallery">https://example.com/gallery</a></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-image"><span class="bmd-image-placeholder">![[image1.png]]</span></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-image"><span class="bmd-image-placeholder">![[image2.png]]</span></div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Some descriptive text</div>
+    </div>
+
+  <h2>Test Case 8: Numbered Items</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><span style="position:absolute;top:-10px;left:-10px;background:#0969da;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:700;z-index:10">1</span>First priority</div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-quote">&quot;This is the most important thing</div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Details here</div>
+    </div>
+    <div class="bmd-line bmd-last bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Sub detail</div>
+    </div>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><span style="position:absolute;top:-10px;left:-10px;background:#0969da;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:700;z-index:10">2</span>Second priority</div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Another comment</div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-image"><span class="bmd-image-placeholder">![[priority2.png]]</span></div>
+    </div>
+
+  <h2>Regular List (Should NOT render as BMD)</h2>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url">simple item 1</div>
+    </div>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url">simple item 2</div>
+    </div>
+    <div class="bmd-line bmd-first bmd-last">
+      <div class="bmd-url">simple item 3</div>
+    </div>
+
+  <h2>Plain Paragraph (Should NOT be affected)</h2>
+
+  <div class="regular-content">
+    <p>This is just regular text content that should render normally without any BMD styling applied to it.</p>
+  </div>
+
+  <h2>Mixed Content Test</h2>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://example.com/start">https://example.com/start</a></div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">First child with text</div>
+    </div>
+    <div class="bmd-line">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Second child with more text</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Nested under second</div>
+    </div>
+    <div class="bmd-line bmd-deep-2">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Another nested item</div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Third child</div>
+    </div>
+
+  <div class="regular-content">
+    <p>Some regular text between blocks.</p>
+  </div>
+    <div class="bmd-line bmd-first">
+      <div class="bmd-url"><a href="https://example.com/end">https://example.com/end</a></div>
+    </div>
+    <div class="bmd-line bmd-last">
+      <div class="bmd-url"></div>
+      <div class="bmd-right">Final child</div>
+    </div>
+
+</body>
+</html>

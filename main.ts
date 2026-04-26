@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, Setting, App } from 'obsidian';
+import { Plugin, PluginSettingTab, Setting, App, MarkdownView } from 'obsidian';
 import { bmdExtension } from './src/bmd-extension';
 
 export interface BMDSettings {
@@ -38,8 +38,17 @@ export default class BMDPlugin extends Plugin {
       callback: () => {
         this.settings.enabled = !this.settings.enabled;
         this.saveSettings();
-        // Reload the view to apply changes
-        this.app.workspace.activeEditor?.editor?.refresh();
+        // Force all open markdown editors to re-render decorations
+        this.app.workspace.iterateAllLeaves((leaf) => {
+          const view = leaf.view;
+          if (view instanceof MarkdownView) {
+            const cm = (view.editor as any).cm;
+            if (cm) {
+              // Dispatch empty transaction to force decoration refresh
+              cm.dispatch({});
+            }
+          }
+        });
       }
     });
 
