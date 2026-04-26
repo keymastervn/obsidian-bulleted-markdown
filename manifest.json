@@ -1,7 +1,7 @@
 {
   "id": "obsidian-bulleted-markdown",
   "name": "Bulleted Markdown (BMD)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "0.15.0",
   "description": "Renders bullet lists as two-column cards in Live Preview while keeping raw markdown pure.",
   "author": "keymastervn",

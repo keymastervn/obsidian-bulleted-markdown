@@ -1,6 +1,6 @@
 {
   "name": "obsidian-bulleted-markdown",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Renders bullet lists as two-column cards in Live Preview",
   "main": "main.js",
   "scripts": {
